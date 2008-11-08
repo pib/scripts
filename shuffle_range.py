@@ -50,7 +50,7 @@ if __name__=="__main__":
         shuffler = Shuffler(mpd_host, mpd_port)
         if sys.argv[1] == 'rest':
             shuffler.shuffle_rest()
-        elif len(sys.argv) == 2:
+        elif len(sys.argv) == 3:
             shuffler.shuffle_range(sys.argv[1], sys.argv[2])
 
         else: print usage
