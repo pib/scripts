@@ -1,88 +1,66 @@
-import sys
-
 class chessboard:
     cps = ((-2,-1),(-2,1),(-1,2),(1,2),(2,1),(2,-1),(1,-2),(-1,-2))
     def __init__(self,n,m,i,j):
-        self.n = n
-        self.m = m
-        self.pos = (i,j)
-        self.start = (i,j)
+        self.size = (n, m)
+        self.pos = self.start = (i,j)
         self.board = [[0]*m for i in range(n)]
-
+        self.move_board = [[0]*m for i in range(n)]
         self.set_weights()
-        
-        self.moves = list()
-        self.moves.append(self.pos)
     
     def on_board(self, i, j):
-        return (i>=0) and (j>=0) and (i<(self.n)) and (j<(self.m))
+        return (i>=0) and (j>=0) and (i<(self.size[0])) and (j<(self.size[1]))
     
     def zero(self, pos):
-        for c in self.cps:
-            i,j = pos[0]+c[0], pos[1]+c[1]
+        for i, j in ((pos[0]+i, pos[1]+j) for i, j in self.cps):
             if self.on_board(i,j) and (self.board[i][j] != 0):
                 self.board[i][j] -= 1
         self.board[pos[0]][pos[1]] = 0
 
     def set_weights(self):
-        for i in range(self.n):
-            for j in range(self.m):
-                for c in self.cps:
-                    if self.on_board(c[0]+i,c[1]+j):
-                        self.board[i][j] += 1
-    
+        rangen, rangem = range(self.size[0]), range(self.size[1])
+        for i, j in ((i,j) for i in rangen for j in rangem):
+            for ci, cj in ((i+c[0], j+c[1]) for c in self.cps):
+                if self.on_board(ci, cj): self.board[i][j] += 1
+
     def get_lowest(self, pos):
-        lowv = 9
-        for c in self.cps:
-            i,j = pos[0]+c[0], pos[1]+c[1]
-            if self.on_board(i,j) and (((self.board[i][j] < lowv) and (self.board[i][j] > 0)) or (lowv == 0)):
-                lowp = (i,j)
-                lowv = self.board[i][j]
-        if lowv == 9: return (-1,-1)
-        return lowp
+        neighbors = [(pos[0]+i, pos[1]+j) for i, j in self.cps]
+        lowv = min(((self.board[i][j], i, j) for i, j in neighbors 
+                    if self.on_board(i, j)), key=lambda x: x[0] or 9)
+        if lowv[0] in (0, 9): return None
+        return lowv[1:]
     
     def solve(self):
+        i = 1
         while True:
             low = self.get_lowest(self.pos)
             self.zero(self.pos)
-            if low[0] == -1: break
-            self.moves.append(low)
-            self.pos = low
+            if not low: break
+            self.pos = pos = low
+            self.move_board[low[0]][low[1]] = i
+            i += 1
 
-        if len(self.moves) == (self.n * self.m):
-            closed = False
-            for c in self.cps:
-                p = (self.pos[0]+c[0], self.pos[1]+c[1])
-                if self.on_board(p[0], p[1]) and self.start == p:
-                        self.tour_type = "closed"
-                        closed = True
-                        break
-            if not closed:
+        if i == (self.size[0] * self.size[1]):
+            if self.start in ((pos[0]+i, pos[1]+j) for i, j in self.cps):
+                self.tour_type = "closed"
+            else:
                 self.tour_type = "open"
         else: self.tour_type = "incomplete"
-        self.board = list()
-        for i in range(self.n):
-            self.board.append([0]*self.m)
-        i = 1
-        for s in self.moves:
-            self.board[s[0]][s[1]] = i
-            i += 1
     
     def __str__(self):
         out = ''
-        for i in range(self.n):
-            for j in range(self.m):
-                out += "%02d " % self.board[i][j]
+        for i in range(self.size[0]):
+            for j in range(self.size[1]):
+                out += "%02d " % self.move_board[i][j]
             out += "\n"
         return out
 
 def main(n):
-        b = chessboard(n,n, 0, 0)
-        b.solve()
-        print b, # solution!
-        print "Found a Knight's tour that is", b.tour_type
-        print
+    b = chessboard(n,n, 0, 0)
+    b.solve()
+    print b, # solution!
+    print "Found a Knight's tour that is", b.tour_type
 
 if __name__=="__main__":
-        if len(sys.argv) < 2:  main(8, 8)
-        else: main(int(sys.argv[1]))
+    import sys
+    if len(sys.argv) < 2:  main(8, 8)
+    else: main(int(sys.argv[1]))
