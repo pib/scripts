@@ -6,6 +6,7 @@ class chessboard:
         self.board = [[0]*m for i in range(n)]
         self.move_board = [[0]*m for i in range(n)]
         self.set_weights()
+        self.moves = [(i, j)]
     
     def on_board(self, i, j):
         return (i>=0) and (j>=0) and (i<(self.size[0])) and (j<(self.size[1]))
@@ -36,6 +37,7 @@ class chessboard:
             self.zero(self.pos)
             if not low: break
             self.pos = pos = low
+            self.moves.append(low)
             self.move_board[low[0]][low[1]] = i
             i += 1
 
